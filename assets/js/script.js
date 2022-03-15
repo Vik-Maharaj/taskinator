@@ -53,6 +53,30 @@ var createTaskEl = function(taskDataObj) {
   listItemEl.appendChild(taskActionsEl);
   tasksToDoEl.appendChild(listItemEl);
 
+  switch (taskDataObj.status) {
+    case "to do":
+      taskActionsEl.querySelector("select[name='status-change']").selectedIndex = 0;
+      tasksToDoEl.append(listItemEl);
+      break;
+    case "in progress":
+      taskActionsEl.querySelector("select[name='status-change']").selectedIndex = 1;
+      tasksInProgressEl.append(listItemEl);
+      break;
+    case "completed":
+      taskActionsEl.querySelector("select[name='status-change']").selectedIndex = 2;
+      tasksCompletedEl.append(listItemEl);
+      break;
+    default:
+      console.log("Something went wrong!");
+  }
+
+  taskDataObj.id = taskIdCounter;
+
+  tasks.push(taskDataObj);
+
+  
+  saveTasks();
+
 
   taskIdCounter++;
 };
@@ -157,15 +181,52 @@ var editTask = function(taskId) {
   formEl.querySelector("#save-task").textContent = "Save Task";
 };
 
-var deleteTask = function(taskId) {
+var deleteTask = function (taskId) {
   console.log(taskId);
-
-  var taskSelected = document.querySelector(".task-item[data-task-id='" + taskId + "']");
+  // find task list element with taskId value and remove it
+  var taskSelected = document.querySelector(
+    ".task-item[data-task-id='" + taskId + "']"
+  );
   taskSelected.remove();
+  var updatedTaskArr = [];
+
+
+  for (var i = 0; i < tasks.length; i++) {
+
+    if (tasks[i].id !== parseInt(taskId)) {
+      updatedTaskArr.push(tasks[i]);
+    }
+  }
+
+  tasks = updatedTaskArr;
+  saveTasks();
+};
+
+var saveTasks = function() {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+};
+
+var loadTasks = function() {
+  var savedTasks = localStorage.getItem("tasks");
+  if (!savedTasks) {
+    return false;
+  }
+  console.log("Saved tasks found!");
+
+
+  savedTasks = JSON.parse(savedTasks);
+
+  for (var i = 0; i < savedTasks.length; i++) {
+    createTaskEl(savedTasks[i]);
+  }
 };
 
 formEl.addEventListener("submit", taskFormHandler);
 
+// for edit and delete buttons
 pageContentEl.addEventListener("click", taskButtonHandler);
 
+// for changing the status
 pageContentEl.addEventListener("change", taskStatusChangeHandler);
+
+loadTasks();
